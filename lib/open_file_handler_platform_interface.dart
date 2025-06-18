@@ -43,7 +43,7 @@ abstract class OpenFileHandlerPlatform extends PlatformInterface {
   }
 
   StreamSubscription<dynamic> listen(
-    Function(List<OpenFileHandlerFile> event) onEvent, {
+    Function(List<OpenFileHandlerFile> files) onEvent, {
     Function? onError,
   }) {
     throw UnimplementedError('listen() has not been implemented.');

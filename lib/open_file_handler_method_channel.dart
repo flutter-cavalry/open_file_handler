@@ -14,7 +14,7 @@ class MethodChannelOpenFileHandler extends OpenFileHandlerPlatform {
 
   @override
   StreamSubscription<dynamic> listen(
-    Function(List<OpenFileHandlerFile> event) onEvent, {
+    Function(List<OpenFileHandlerFile> files) onEvent, {
     Function? onError,
   }) {
     final stream = eventChannel.receiveBroadcastStream();
