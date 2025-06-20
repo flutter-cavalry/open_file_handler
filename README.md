@@ -8,7 +8,7 @@ Note that **this is not share extension**. This plugin is based on `CFBundleDocu
   - In Files app, long press on a file, select "Share", then choose your app from the list.
 - macOS
   - In Finder, right-click on a file, select "Open With", then choose your app from the list.
-
+ 
 ## Usage
 
 ### iOS
@@ -41,7 +41,13 @@ Add the following to your `AppDelegate.swift`:
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
-    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: ["urls": [url]])
+    let map = [
+      "name": url.lastPathComponent,
+      "path": url.path,
+      "uri": url.absoluteString,
+    ]
+    
+    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
     return true
   }
 ```
@@ -72,7 +78,15 @@ Add the following to your `AppDelegate.swift`:
 
 ```swift
   override func application(_ application: NSApplication, open urls: [URL]) {
-    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: ["urls": urls])
+    if let first = urls.first {
+      let map = [
+        "name": first.lastPathComponent,
+        "path": first.path,
+        "uri": first.absoluteString,
+      ]
+      
+      NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
+    }
   }
 ```
 
@@ -83,9 +97,9 @@ final _openFileHandlerPlugin = OpenFileHandler();
 
 // Usually in `initState` of your widget.
 _openFileHandlerPlugin.listen(
-  (files) {
-    // Handle files.
-    // Each file is a [OpenFileHandlerFile] object with the following properties:
+  (file) {
+    // Handle incoming file.
+    // `file` is a [OpenFileHandlerFile] object with the following properties:
     // - `name`: The name of the file.
     // - `path`: The path to the file.
     // - `uri`: The URI/URL of the file.

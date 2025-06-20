@@ -21,9 +21,9 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     _openFileHandlerPlugin.listen(
-      (files) {
+      (file) {
         setState(() {
-          _output = files.join(', ');
+          _output = file.toString();
         });
       },
       onError: (error) {

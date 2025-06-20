@@ -22,20 +22,10 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   -> FlutterError?
   {
     NotificationCenter.default.addObserver(forName: NSNotification.Name("open_file_handler/events"), object: nil, queue: nil) { noti in
-      guard let userInfo = noti.userInfo,
-            let urls = userInfo["urls"] as? [URL] else {
+      guard let userInfo = noti.userInfo else {
         return
       }
-      let files = urls.map {
-        return [
-          "name": $0.lastPathComponent,
-          "path": $0.path,
-          "uri": $0.absoluteString,
-        ]
-      }
-      events([
-        "files": files,
-      ])
+      events(userInfo)
     }
     return nil
   }

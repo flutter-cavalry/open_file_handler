@@ -12,6 +12,14 @@ class AppDelegate: FlutterAppDelegate {
   }
   
   override func application(_ application: NSApplication, open urls: [URL]) {
-    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: ["urls": urls])
+    if let first = urls.first {
+      let map = [
+        "name": first.lastPathComponent,
+        "path": first.path,
+        "uri": first.absoluteString,
+      ]
+      
+      NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
+    }
   }
 }

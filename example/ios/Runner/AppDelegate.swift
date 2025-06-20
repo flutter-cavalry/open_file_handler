@@ -16,7 +16,13 @@ import UIKit
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
-    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: ["urls": [url]])
+    let map = [
+      "name": url.lastPathComponent,
+      "path": url.path,
+      "uri": url.absoluteString,
+    ]
+    
+    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
     return true
   }
 }

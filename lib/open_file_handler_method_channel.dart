@@ -14,21 +14,18 @@ class MethodChannelOpenFileHandler extends OpenFileHandlerPlatform {
 
   @override
   StreamSubscription<dynamic> listen(
-    Function(List<OpenFileHandlerFile> files) onEvent, {
+    Function(OpenFileHandlerFile file) onEvent, {
     Function? onError,
   }) {
     final stream = eventChannel.receiveBroadcastStream();
     return stream.listen((event) {
-      final mapList =
-          (event as Map<dynamic, dynamic>)['files'] as List<dynamic>;
-      final List<OpenFileHandlerFile> files = mapList.map((map) {
-        return OpenFileHandlerFile(
-          name: map['name'] as String,
-          uri: map['uri'] as String,
-          path: map['path'] as String,
-        );
-      }).toList();
-      onEvent(files);
+      final map = event as Map<dynamic, dynamic>;
+      final file = OpenFileHandlerFile(
+        name: map['name'] as String,
+        uri: map['uri'] as String,
+        path: map['path'] as String,
+      );
+      onEvent(file);
     }, onError: (error) => onError?.call(error));
   }
 }
