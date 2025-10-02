@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import open_file_handler
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -16,13 +17,7 @@ import UIKit
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
-    let map = [
-      "name": url.lastPathComponent,
-      "path": url.path,
-      "uri": url.absoluteString,
-    ]
-    
-    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/hot_uris"), object: nil, userInfo: map)
+    OpenFileHandlerPlugin.handleOpenURIs([url])
     return true
   }
 }
