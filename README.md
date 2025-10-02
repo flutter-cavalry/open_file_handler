@@ -37,6 +37,8 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
 Handle incoming URLs in `AppDelegate.swift`:
 
 ```swift
+import open_file_handler
+
 override func application(
   _ app: UIApplication,
   open url: URL,
@@ -74,6 +76,8 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
 Handle incoming URLs in `AppDelegate.swift`:
 
 ```swift
+import open_file_handler
+
 override func application(_ application: NSApplication, open urls: [URL]) {
   OpenFileHandlerPlugin.handleOpenURIs(urls)
 }
@@ -101,6 +105,8 @@ Add intent filters to your `AndroidManifest.xml` file to specify the types of fi
 Handle incoming intents in main activity `MainActivity.kt`:
 
 ```kotlin
+import com.fluttercavalry.open_file_handler.OpenFileHandlerPlugin
+
 override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     handleIntent(intent)
