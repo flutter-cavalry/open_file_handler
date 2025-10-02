@@ -1,13 +1,23 @@
-import Flutter
-import UIKit
+import Foundation
+
+#if os(iOS)
+  import Flutter
+#elseif os(macOS)
+  import FlutterMacOS
+#endif
 
 public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "open_file_handler", binaryMessenger: registrar.messenger())
+    #if os(iOS)
+      let binaryMessenger = registrar.messenger()
+    #elseif os(macOS)
+      let binaryMessenger = registrar.messenger
+    #endif
+    let channel = FlutterMethodChannel(name: "open_file_handler", binaryMessenger: binaryMessenger)
     let instance = OpenFileHandlerPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
     let eventChannel = FlutterEventChannel(
-      name: "open_file_handler/events", binaryMessenger: registrar.messenger())
+      name: "open_file_handler/events", binaryMessenger: binaryMessenger)
     eventChannel.setStreamHandler(instance)
   }
 
