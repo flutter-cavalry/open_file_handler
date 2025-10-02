@@ -5,7 +5,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'open_file_handler_method_channel.dart';
 
 class OpenFileHandlerFile {
-  final String name;
+  final String? name;
   final String? path;
   final String uri;
 

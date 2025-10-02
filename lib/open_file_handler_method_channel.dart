@@ -22,7 +22,7 @@ class MethodChannelOpenFileHandler extends OpenFileHandlerPlatform {
       final maps = event as List<dynamic>;
       final files = maps.map((map) {
         return OpenFileHandlerFile(
-          name: map['name'] as String,
+          name: map['name'] as String?,
           uri: map['uri'] as String,
           path: map['path'] as String?,
         );

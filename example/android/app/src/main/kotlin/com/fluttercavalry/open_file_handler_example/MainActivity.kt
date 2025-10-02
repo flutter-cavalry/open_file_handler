@@ -21,7 +21,8 @@ class MainActivity : FlutterActivity() {
         if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_EDIT) {
             val uri = intent.data
             if (uri != null) {
-                OpenFileHandlerPlugin.handleOpenURIs(listOf(uri))
+                val copyToLocal = true;
+                OpenFileHandlerPlugin.handleOpenURIs(listOf(uri), copyToLocal)
             }
         }
     }

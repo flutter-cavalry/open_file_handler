@@ -34,11 +34,11 @@ class OpenFileHandlerPlugin :
 
         private var coldOpenURIs: List<Uri> = emptyList()
 
-        fun handleOpenURIs(uris: List<Uri>) {
+        fun handleOpenURIs(uris: List<Uri>, copyToLocal: Boolean) {
             val eventSink = instance?.eventSink
             val context = instance?.context
             if (eventSink != null && context != null) {
-                val mapped = mapURIs(context, uris, true)
+                val mapped = mapURIs(context, uris, copyToLocal)
                 eventSink.success(mapped)
             } else {
                 coldOpenURIs = uris
@@ -145,7 +145,6 @@ fun mapURIs(context: Context, uris: List<Uri>, copyToLocal: Boolean): List<Map<S
         mapOf(
             "uri" to uri.toString(),
             "name" to fileName,
-            "extension" to extension,
             "path" to path
         )
     }
