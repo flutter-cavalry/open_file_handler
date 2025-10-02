@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "open_file_handler",
     platforms: [
-        .macOS("10.14")
+        .iOS("14.0"),
+        .macOS("11.0")
     ],
     products: [
         .library(name: "open-file-handler", targets: ["open_file_handler"])
@@ -17,8 +18,8 @@ let package = Package(
             name: "open_file_handler",
             dependencies: [],
             resources: [
-                // If your plugin requires a privacy manifest, for example if it collects user
-                // data, update the PrivacyInfo.xcprivacy file to describe your plugin's
+                // If your plugin requires a privacy manifest, for example if it uses any required
+                // reason APIs, update the PrivacyInfo.xcprivacy file to describe your plugin's
                 // privacy impact, and then uncomment these lines. For more information, see
                 // https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
                 // .process("PrivacyInfo.xcprivacy"),
