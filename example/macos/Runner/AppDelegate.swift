@@ -1,4 +1,5 @@
 import Cocoa
+import open_file_handler
 import FlutterMacOS
 
 @main
@@ -12,14 +13,6 @@ class AppDelegate: FlutterAppDelegate {
   }
   
   override func application(_ application: NSApplication, open urls: [URL]) {
-    if let first = urls.first {
-      let map = [
-        "name": first.lastPathComponent,
-        "path": first.path,
-        "uri": first.absoluteString,
-      ]
-      
-      NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
-    }
+    OpenFileHandlerPlugin.handleOpenURIs(urls)
   }
 }

@@ -7,18 +7,37 @@ import Foundation
 #endif
 
 public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+  private static var _instance: OpenFileHandlerPlugin?
+  private static var _coldOpenURIs: [URL] = []
+  
+  private var _eventSink: FlutterEventSink?
+  
+  
+  public static func handleOpenURIs(_ urls: [URL]) {
+    if let eventSink = _instance?._eventSink {
+      let uriMaps = urls.map { urlToMap($0) }
+      eventSink(uriMaps)
+    } else {
+      _coldOpenURIs.append(contentsOf: urls)
+    }
+  }
+  
   public static func register(with registrar: FlutterPluginRegistrar) {
-    #if os(iOS)
+    if OpenFileHandlerPlugin._instance == nil {
+#if os(iOS)
       let binaryMessenger = registrar.messenger()
-    #elseif os(macOS)
+#elseif os(macOS)
       let binaryMessenger = registrar.messenger
-    #endif
-    let channel = FlutterMethodChannel(name: "open_file_handler", binaryMessenger: binaryMessenger)
-    let instance = OpenFileHandlerPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
-    let eventChannel = FlutterEventChannel(
-      name: "open_file_handler/events", binaryMessenger: binaryMessenger)
-    eventChannel.setStreamHandler(instance)
+#endif
+      let channel = FlutterMethodChannel(name: "open_file_handler", binaryMessenger: binaryMessenger)
+      let instance = OpenFileHandlerPlugin()
+      registrar.addMethodCallDelegate(instance, channel: channel)
+      let eventChannel = FlutterEventChannel(
+        name: "open_file_handler/hot_uris", binaryMessenger: binaryMessenger)
+      eventChannel.setStreamHandler(instance)
+      
+      OpenFileHandlerPlugin._instance = instance
+    }
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -31,27 +50,28 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
   -> FlutterError?
   {
-    NotificationCenter.default.addObserver(forName: NSNotification.Name("open_file_handler/events"), object: nil, queue: nil) { noti in
-      guard let userInfo = noti.userInfo,
-            let urls = userInfo["urls"] as? [URL] else {
-        return
+    _eventSink = events
+    // Do it after return.
+    if !OpenFileHandlerPlugin._coldOpenURIs.isEmpty {
+      DispatchQueue.main.async {
+        let uriMaps = OpenFileHandlerPlugin._coldOpenURIs.map { urlToMap($0) }
+        events(uriMaps)
+        OpenFileHandlerPlugin._coldOpenURIs.removeAll()
       }
-      let files = urls.map {
-        return [
-          "name": $0.lastPathComponent,
-          "path": $0.path,
-          "uri": $0.absoluteString,
-        ]
-      }
-      events([
-        "files": files,
-      ])
     }
     return nil
   }
   
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-    NotificationCenter.default.removeObserver(self, name: NSNotification.Name("open_file_handler/events"), object: nil)
+    _eventSink = nil
     return nil
   }
+}
+
+func urlToMap(_ url: URL) -> [String: String] {
+  return [
+    "name": url.lastPathComponent,
+    "path": url.path,
+    "uri": url.absoluteString,
+  ]
 }

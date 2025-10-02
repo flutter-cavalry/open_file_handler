@@ -22,7 +22,7 @@ import UIKit
       "uri": url.absoluteString,
     ]
     
-    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
+    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/hot_uris"), object: nil, userInfo: map)
     return true
   }
 }

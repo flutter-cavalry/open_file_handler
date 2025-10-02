@@ -6,7 +6,7 @@ import 'open_file_handler_method_channel.dart';
 
 class OpenFileHandlerFile {
   final String name;
-  final String path;
+  final String? path;
   final String uri;
 
   OpenFileHandlerFile({
@@ -43,7 +43,7 @@ abstract class OpenFileHandlerPlatform extends PlatformInterface {
   }
 
   StreamSubscription<dynamic> listen(
-    Function(OpenFileHandlerFile file) onEvent, {
+    Function(List<OpenFileHandlerFile> files) onEvent, {
     Function? onError,
   }) {
     throw UnimplementedError('listen() has not been implemented.');

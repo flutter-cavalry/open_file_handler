@@ -47,7 +47,7 @@ Add the following to your `AppDelegate.swift`:
       "uri": url.absoluteString,
     ]
     
-    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
+    NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/hot_uris"), object: nil, userInfo: map)
     return true
   }
 ```
@@ -85,7 +85,7 @@ Add the following to your `AppDelegate.swift`:
         "uri": first.absoluteString,
       ]
       
-      NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/events"), object: nil, userInfo: map)
+      NotificationCenter.default.post(name: NSNotification.Name("open_file_handler/hot_uris"), object: nil, userInfo: map)
     }
   }
 ```
@@ -97,9 +97,9 @@ final _openFileHandlerPlugin = OpenFileHandler();
 
 // Usually in `initState` of your widget.
 _openFileHandlerPlugin.listen(
-  (file) {
-    // Handle incoming file.
-    // `file` is a [OpenFileHandlerFile] object with the following properties:
+  (files) {
+    // Handle incoming files.
+    // `files` is a list of [OpenFileHandlerFile] objects with the following properties:
     // - `name`: The name of the file.
     // - `path`: The path to the file.
     // - `uri`: The URI/URL of the file.

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:open_file_handler/open_file_handler.dart';
 
@@ -21,9 +23,22 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     _openFileHandlerPlugin.listen(
-      (file) {
+      (files) async {
+        String output = '';
+        for (var file in files) {
+          int length;
+          if (file.path != null) {
+            final f = File(file.path!);
+            length = await f.length();
+          } else {
+            length = -1;
+          }
+
+          output +=
+              'name: ${file.name}, path: ${file.path}, uri: ${file.uri}, size: $length\n';
+        }
         setState(() {
-          _output = file.toString();
+          _output = output;
         });
       },
       onError: (error) {
