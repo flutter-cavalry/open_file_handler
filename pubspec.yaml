@@ -40,6 +40,9 @@ flutter:
       macos:
         pluginClass: OpenFileHandlerPlugin
         sharedDarwinSource: true
+      android:
+        package: com.fluttercavalry.open_file_handler
+        pluginClass: OpenFileHandlerPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
