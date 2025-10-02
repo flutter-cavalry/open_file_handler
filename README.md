@@ -1,5 +1,7 @@
 # open_file_handler
 
+[![pub package](https://img.shields.io/pub/v/open_file_handler.svg)](https://pub.dev/packages/open_file_handler)
+
 Adds "Open with app" functionality to your Flutter app.
 
 - This plugin is **NOT** about handling deep links, universal links or network links.
