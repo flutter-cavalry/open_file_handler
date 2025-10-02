@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/open_file_handler.svg)](https://pub.dev/packages/open_file_handler)
 
-Adds "Open with app" functionality to your Flutter app.
+Flutter plugin to add 'Open with app' functionality to your app.
 
 - This plugin is **NOT** about handling deep links, universal links or network links.
 - This plugin is **NOT** about handling share content.
@@ -126,11 +126,11 @@ private fun handleIntent(intent: Intent) {
 
 #### `copyToLocal`
 
-Unlike iOS / macOS, where file URLs can be converted to file paths directly, Android file URIs may not be directly accessible due to permission issues. To handle this, you use the `copyToLocal`.
+Unlike iOS / macOS, where file URLs can be converted to file paths directly, Android file URIs may not correspond to direct file paths. Use `copyToLocal` to configure the behavior:
 
-- When `false`: no copy is made, and the URI is passed as-is to Dart side.
+- When `false`: no file copy is made. URIs are passed to Dart side without file paths.
   - You can use my other packages to handle Android file URIs: [saf_stream](https://pub.dev/packages/saf_stream), [saf_util](https://pub.dev/packages/saf_util).
-- When `true`: the file is copied to your app's local cache directory, and the local file path is passed to Dart side.
+- When `true`: the file is copied to your app's local cache directory. URIs and corresponding file paths are passed to Dart side.
 
 See "Usage - Flutter" below for Dart side usage.
 
