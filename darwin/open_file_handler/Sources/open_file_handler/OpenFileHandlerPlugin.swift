@@ -12,7 +12,6 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   
   private var _eventSink: FlutterEventSink?
   
-  
   public static func handleOpenURIs(_ urls: [URL]) {
     if let eventSink = _instance?._eventSink {
       let uriMaps = urls.map { urlToMap($0) }
