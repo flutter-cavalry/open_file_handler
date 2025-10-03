@@ -48,4 +48,8 @@ abstract class OpenFileHandlerPlatform extends PlatformInterface {
   }) {
     throw UnimplementedError('listen() has not been implemented.');
   }
+
+  Future<void> releaseIosURIs() {
+    throw UnimplementedError('releaseIosURIs() has not been implemented.');
+  }
 }

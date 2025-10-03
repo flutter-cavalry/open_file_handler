@@ -9,10 +9,20 @@ import Foundation
 public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private static var _instance: OpenFileHandlerPlugin?
   private static var _coldOpenURIs: [URL] = []
+  // On iOS, URLs have security scope, so we need to keep them before releasing.
+  private static var _iosPendingOpenURIs: [URL] = []
   
   private var _eventSink: FlutterEventSink?
   
   public static func handleOpenURIs(_ urls: [URL]) {
+#if os(iOS)
+    _iosPendingOpenURIs = urls
+    for url in urls {
+      if (!url.startAccessingSecurityScopedResource()) {
+        return
+      }
+    }
+#endif // os(iOS)
     if let eventSink = _instance?._eventSink {
       let uriMaps = urls.map { urlToMap($0) }
       eventSink(uriMaps)
@@ -41,6 +51,12 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
+      case "releaseIosURIs":
+      for url in OpenFileHandlerPlugin._iosPendingOpenURIs {
+          url.stopAccessingSecurityScopedResource()
+      }
+      OpenFileHandlerPlugin._iosPendingOpenURIs = []
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }

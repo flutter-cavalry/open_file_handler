@@ -40,6 +40,10 @@ class _MyAppState extends State<MyApp> {
         setState(() {
           _output = output;
         });
+
+        if (Platform.isIOS) {
+          await _openFileHandlerPlugin.releaseIosURIs();
+        }
       },
       onError: (error) {
         setState(() {

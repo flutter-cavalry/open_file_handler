@@ -30,4 +30,9 @@ class MethodChannelOpenFileHandler extends OpenFileHandlerPlatform {
       onEvent(files);
     }, onError: (error) => onError?.call(error));
   }
+
+  @override
+  Future<void> releaseIosURIs() {
+    return methodChannel.invokeMethod('releaseIosURIs');
+  }
 }

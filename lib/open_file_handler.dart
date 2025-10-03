@@ -9,4 +9,8 @@ class OpenFileHandler {
   }) {
     return OpenFileHandlerPlatform.instance.listen(onEvent, onError: onError);
   }
+
+  Future<void> releaseIosURIs() {
+    return OpenFileHandlerPlatform.instance.releaseIosURIs();
+  }
 }
