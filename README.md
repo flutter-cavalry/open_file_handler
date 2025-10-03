@@ -160,6 +160,11 @@ _openFileHandlerPlugin.listen(
     // - `path`: The path to the file.
     //   iOS/macOS: Always available.
     //   Android: Only available if you set `copyToLocal` to true when calling `OpenFileHandlerPlugin.handleOpenURIs`.
+
+    // iOS only: release security-scoped URLs if needed.
+    if (Platform.isIOS) {
+      await _openFileHandlerPlugin.releaseIosURIs();
+    }
   },
   onError: (error) {
     // Handle error.

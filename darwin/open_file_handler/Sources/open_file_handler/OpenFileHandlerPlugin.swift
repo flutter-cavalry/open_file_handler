@@ -10,16 +10,15 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   private static var _instance: OpenFileHandlerPlugin?
   private static var _coldOpenURIs: [URL] = []
   // On iOS, URLs have security scope, so we need to keep them before releasing.
-  private static var _iosPendingOpenURIs: [URL] = []
+  private static var _iosPendingOpenURI: URL?
   
   private var _eventSink: FlutterEventSink?
   
   public static func handleOpenURIs(_ urls: [URL]) {
 #if os(iOS)
-    _iosPendingOpenURIs = urls
-    for url in urls {
-      if (!url.startAccessingSecurityScopedResource()) {
-        return
+    if let firstURI = urls.first {
+      if (firstURI.startAccessingSecurityScopedResource()) {
+        _iosPendingOpenURI = firstURI
       }
     }
 #endif // os(iOS)
@@ -52,10 +51,8 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
       case "releaseIosURIs":
-      for url in OpenFileHandlerPlugin._iosPendingOpenURIs {
-          url.stopAccessingSecurityScopedResource()
-      }
-      OpenFileHandlerPlugin._iosPendingOpenURIs = []
+      OpenFileHandlerPlugin._iosPendingOpenURI?.stopAccessingSecurityScopedResource()
+      OpenFileHandlerPlugin._iosPendingOpenURI = nil
       result(nil)
     default:
       result(FlutterMethodNotImplemented)
