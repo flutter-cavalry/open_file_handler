@@ -93,7 +93,6 @@ Add intent filters to your `AndroidManifest.xml` file to specify the types of fi
 <intent-filter>
     <action android:name="android.intent.action.VIEW" />
     <category android:name="android.intent.category.DEFAULT" />
-    <category android:name="android.intent.category.BROWSABLE" />
 
     <!-- Media types your app can handle -->
     <data android:mimeType="image/*" />
