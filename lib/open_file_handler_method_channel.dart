@@ -25,6 +25,7 @@ class MethodChannelOpenFileHandler extends OpenFileHandlerPlatform {
           name: map['name'] as String?,
           uri: map['uri'] as String,
           path: map['path'] as String?,
+          original: map['original'] as bool,
         );
       }).toList();
       onEvent(files);

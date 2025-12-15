@@ -33,15 +33,19 @@ class OpenFileHandlerPlugin :
         private var instance: OpenFileHandlerPlugin? = null
 
         private var coldOpenURIs: List<Uri> = emptyList()
+        private var coldCopyToLocal = false
+        private var coldOriginal = true
 
-        fun handleOpenURIs(uris: List<Uri>, copyToLocal: Boolean) {
+        fun handleOpenURIs(uris: List<Uri>, copyToLocal: Boolean, original: Boolean) {
             val eventSink = instance?.eventSink
             val context = instance?.context
             if (eventSink != null && context != null) {
-                val mapped = mapURIs(context, uris, copyToLocal)
+                val mapped = mapURIs(context, uris, copyToLocal, original)
                 eventSink.success(mapped)
             } else {
                 coldOpenURIs = uris
+                coldCopyToLocal = copyToLocal
+                coldOriginal = original
             }
         }
     }
@@ -75,7 +79,7 @@ class OpenFileHandlerPlugin :
             CoroutineScope(Dispatchers.Main).launch {
                 val context = context
                 if (context != null) {
-                    val mapped = mapURIs(context, coldOpenURIs, true)
+                    val mapped = mapURIs(context, coldOpenURIs, coldCopyToLocal, coldOriginal)
                     eventSink?.success(mapped)
                     coldOpenURIs = emptyList()
                 }
@@ -129,7 +133,7 @@ fun copyUriToTmp(context: Context, uri: Uri, ext: String?): String {
     return tmpFile.absolutePath
 }
 
-fun mapURIs(context: Context, uris: List<Uri>, copyToLocal: Boolean): List<Map<String, String?>> {
+fun mapURIs(context: Context, uris: List<Uri>, copyToLocal: Boolean, original: Boolean): List<Map<String, Any?>> {
     return uris.map { uri ->
         val (fileName, extension) = getFileNameAndExtension(context, uri)
         val path = if (copyToLocal) {
@@ -145,7 +149,8 @@ fun mapURIs(context: Context, uris: List<Uri>, copyToLocal: Boolean): List<Map<S
         mapOf(
             "uri" to uri.toString(),
             "name" to fileName,
-            "path" to path
+            "path" to path,
+            "original" to original
         )
     }
 }

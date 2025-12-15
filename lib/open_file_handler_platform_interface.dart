@@ -8,11 +8,13 @@ class OpenFileHandlerFile {
   final String? name;
   final String? path;
   final String uri;
+  final bool original;
 
   OpenFileHandlerFile({
     required this.name,
     required this.path,
     required this.uri,
+    required this.original,
   });
 
   @override

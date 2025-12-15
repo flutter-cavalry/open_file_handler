@@ -18,11 +18,13 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
-        if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_EDIT) {
+        if (intent.action == Intent.ACTION_VIEW
+            || intent.action == Intent.ACTION_EDIT
+            || intent.action == Intent.ACTION_SEND) {
             val uri = intent.data
             if (uri != null) {
                 val copyToLocal = true;
-                OpenFileHandlerPlugin.handleOpenURIs(listOf(uri), copyToLocal)
+                OpenFileHandlerPlugin.handleOpenURIs(listOf(uri), copyToLocal, intent.action != Intent.ACTION_SEND)
             }
         }
     }

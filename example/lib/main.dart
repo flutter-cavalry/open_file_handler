@@ -35,7 +35,7 @@ class _MyAppState extends State<MyApp> {
           }
 
           output +=
-              'name: ${file.name}, path: ${file.path}, uri: ${file.uri}, size: $length\n';
+              'name: ${file.name}, path: ${file.path}, uri: ${file.uri}, size: $length, original: ${file.original}\n';
         }
         setState(() {
           _output = output;
