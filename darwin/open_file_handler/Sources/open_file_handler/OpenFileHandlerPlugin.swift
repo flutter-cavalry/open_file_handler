@@ -9,21 +9,23 @@ import Foundation
 public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private static var _instance: OpenFileHandlerPlugin?
   private static var _coldOpenURIs: [URL] = []
+  private static var _coldOriginal = false
+  private static var _coldAccessing = false;
   // On iOS, URLs have security scope, so we need to keep them before releasing.
   private static var _iosPendingOpenURI: URL?
   
   private var _eventSink: FlutterEventSink?
   
-  public static func handleOpenURIs(_ urls: [URL]) {
+  public static func handleOpenURIs(_ urls: [URL], original: Bool = true) {
 #if os(iOS)
     if let firstURI = urls.first {
-      if (firstURI.startAccessingSecurityScopedResource()) {
-        _iosPendingOpenURI = firstURI
-      }
+      _coldAccessing = firstURI.startAccessingSecurityScopedResource()
+      _iosPendingOpenURI = firstURI
     }
 #endif // os(iOS)
+    _coldOriginal = original
     if let eventSink = _instance?._eventSink {
-      let uriMaps = urls.map { urlToMap($0) }
+      let uriMaps = urls.map { urlToMap($0, original: original) }
       eventSink(uriMaps)
     } else {
       _coldOpenURIs.append(contentsOf: urls)
@@ -66,7 +68,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
     // Do it after return.
     if !OpenFileHandlerPlugin._coldOpenURIs.isEmpty {
       DispatchQueue.main.async {
-        let uriMaps = OpenFileHandlerPlugin._coldOpenURIs.map { urlToMap($0) }
+        let uriMaps = OpenFileHandlerPlugin._coldOpenURIs.map { urlToMap($0, original: OpenFileHandlerPlugin._coldOriginal) }
         events(uriMaps)
         OpenFileHandlerPlugin._coldOpenURIs.removeAll()
       }
@@ -80,10 +82,11 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   }
 }
 
-func urlToMap(_ url: URL) -> [String: String] {
+func urlToMap(_ url: URL, original: Bool) -> [String: Any?] {
   return [
     "name": url.lastPathComponent,
     "path": url.path,
     "uri": url.absoluteString,
+    "original": original
   ]
 }

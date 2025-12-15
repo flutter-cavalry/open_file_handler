@@ -34,7 +34,7 @@ class OpenFileHandlerPlugin :
 
         private var coldOpenURIs: List<Uri> = emptyList()
         private var coldCopyToLocal = false
-        private var coldOriginal = true
+        private var coldOriginal = false
 
         fun handleOpenURIs(uris: List<Uri>, copyToLocal: Boolean, original: Boolean) {
             val eventSink = instance?.eventSink

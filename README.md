@@ -118,12 +118,19 @@ override fun onNewIntent(intent: Intent) {
 }
 
 private fun handleIntent(intent: Intent) {
-    if (intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_EDIT) {
-        val uri = intent.data
+    if (intent.action == Intent.ACTION_VIEW
+        || intent.action == Intent.ACTION_EDIT
+        // If `Intent.ACTION_SEND` is present in `AndroidManifest.xml`, it should be handled here as well.
+        || intent.action == Intent.ACTION_SEND
+    ) {
+        val uri = intent.data ?: intent.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)
         if (uri != null) {
-            // See below for usage on `copyToLocal` option.
             val copyToLocal = true;
-            OpenFileHandlerPlugin.handleOpenURIs(listOf(uri), copyToLocal)
+            OpenFileHandlerPlugin.handleOpenURIs(
+                listOf(uri),
+                copyToLocal,
+                intent.action != Intent.ACTION_SEND
+            )
         }
     }
 }

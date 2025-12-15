@@ -20,11 +20,17 @@ class MainActivity : FlutterActivity() {
     private fun handleIntent(intent: Intent) {
         if (intent.action == Intent.ACTION_VIEW
             || intent.action == Intent.ACTION_EDIT
-            || intent.action == Intent.ACTION_SEND) {
-            val uri = intent.data
+            // If `Intent.ACTION_SEND` is present in `AndroidManifest.xml`, it should be handled here as well.
+            || intent.action == Intent.ACTION_SEND
+        ) {
+            val uri = intent.data ?: intent.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)
             if (uri != null) {
                 val copyToLocal = true;
-                OpenFileHandlerPlugin.handleOpenURIs(listOf(uri), copyToLocal, intent.action != Intent.ACTION_SEND)
+                OpenFileHandlerPlugin.handleOpenURIs(
+                    listOf(uri),
+                    copyToLocal,
+                    intent.action != Intent.ACTION_SEND
+                )
             }
         }
     }
