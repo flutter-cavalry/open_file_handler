@@ -10,6 +10,11 @@ Flutter plugin to add 'Open with app' functionality to your app.
   - On iOS / macOS, no need to create share extensions!
 - Handles both cold start and warm start in a single API!
 
+## Requirements
+
+- Android: AGP 9+ (Flutter 3.44+)
+- iOS: [UISceneDelegate adoption](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate)
+
 ## Usage
 
 ### iOS
@@ -34,22 +39,7 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
 </array>
 ```
 
-Handle incoming URLs in `AppDelegate.swift`:
-
-```swift
-import open_file_handler
-
-override func application(
-  _ app: UIApplication,
-  open url: URL,
-  options: [UIApplication.OpenURLOptionsKey : Any] = [:]
-) -> Bool {
-  OpenFileHandlerPlugin.handleOpenURIs([url])
-  return true
-}
-```
-
-See "Usage - Flutter" below for Dart side usage.
+See "Usage - Flutter" below for Flutter side usage.
 
 ### macOS
 
@@ -73,17 +63,7 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
 </array>
 ```
 
-Handle incoming URLs in `AppDelegate.swift`:
-
-```swift
-import open_file_handler
-
-override func application(_ application: NSApplication, open urls: [URL]) {
-  OpenFileHandlerPlugin.handleOpenURIs(urls)
-}
-```
-
-See "Usage - Flutter" below for Dart side usage.
+See "Usage - Flutter" below for Flutter side usage.
 
 ### Android
 
@@ -138,13 +118,13 @@ private fun handleIntent(intent: Intent) {
 
 #### `copyToLocal`
 
-Unlike iOS / macOS, where file URLs can be converted to file paths directly, Android file URIs may not correspond to direct file paths. Use `copyToLocal` to configure the behavior:
+Unlike iOS / macOS, where file URLs can be converted to file paths, Android file URIs may not correspond to direct file paths. Use `copyToLocal` to configure the behavior:
 
-- When `false`: no file copy is made. URIs are passed to Dart side without file paths.
-  - You can use my other packages to handle Android file URIs: [saf_stream](https://pub.dev/packages/saf_stream), [saf_util](https://pub.dev/packages/saf_util).
-- When `true`: the file is copied to your app's local cache directory. URIs and corresponding file paths are passed to Dart side.
+- When `false`: no file copy is made. URIs are passed to Flutter side without file paths.
+  - You can use my other packages to read Android file URIs: [saf_stream](https://pub.dev/packages/saf_stream), [saf_util](https://pub.dev/packages/saf_util).
+- When `true`: the file is copied to your app's local cache directory. URIs and corresponding file paths are passed to Flutter side.
 
-See "Usage - Flutter" below for Dart side usage.
+See "Usage - Flutter" below for Flutter side usage.
 
 ### Flutter (this applies to all supported platforms)
 
