@@ -1,3 +1,7 @@
+## 1.0.0
+
+- UISceneDelegate adoption.
+
 ## 0.2.0
 
 - Add `original` to file info.
