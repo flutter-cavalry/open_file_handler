@@ -11,10 +11,13 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.util.UUID
+import java.io.IOException
 
 /** OpenFileHandlerPlugin */
 class OpenFileHandlerPlugin :
@@ -28,22 +31,25 @@ class OpenFileHandlerPlugin :
     private lateinit var channel: MethodChannel
     private var context: Context? = null
     private var eventSink: EventChannel.EventSink? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
         private var instance: OpenFileHandlerPlugin? = null
 
-        private var coldOpenURIs: List<Uri> = emptyList()
+        private var coldOpenURI: Uri? = null
         private var coldCopyToLocal = false
         private var coldOriginal = false
 
-        fun handleOpenURIs(uris: List<Uri>, copyToLocal: Boolean, original: Boolean) {
-            val eventSink = instance?.eventSink
-            val context = instance?.context
-            if (eventSink != null && context != null) {
-                val mapped = mapURIs(context, uris, copyToLocal, original)
-                eventSink.success(mapped)
+        fun handleOpenURI(
+            uri: Uri,
+            copyToLocal: Boolean,
+            original: Boolean,
+        ) {
+            val plugin = instance
+            if (plugin?.eventSink != null && plugin.context != null) {
+                plugin.processURI(uri, copyToLocal, original, plugin.eventSink!!)
             } else {
-                coldOpenURIs = uris
+                coldOpenURI = uri
                 coldCopyToLocal = copyToLocal
                 coldOriginal = original
             }
@@ -63,36 +69,60 @@ class OpenFileHandlerPlugin :
 
     override fun onMethodCall(
         call: MethodCall,
-        result: Result
+        result: Result,
     ) {
         result.notImplemented()
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        eventSink = null
+        context = null
+        if (instance === this) {
+            instance = null
+        }
+        scope.cancel()
     }
 
-    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+    override fun onListen(
+        arguments: Any?,
+        events: EventChannel.EventSink?,
+    ) {
         eventSink = events
-        if (OpenFileHandlerPlugin.coldOpenURIs.isNotEmpty()) {
-            // Launch on main dispatcher to ensure eventSink is ready
-            CoroutineScope(Dispatchers.Main).launch {
-                val context = context
-                if (context != null) {
-                    val mapped = mapURIs(context, coldOpenURIs, coldCopyToLocal, coldOriginal)
-                    eventSink?.success(mapped)
-                    coldOpenURIs = emptyList()
-                }
-            }
+        val uri = coldOpenURI
+        val context = context
+        if (events != null && context != null && uri != null) {
+            coldOpenURI = null
+            processURI(uri, coldCopyToLocal, coldOriginal, events)
         }
     }
 
     override fun onCancel(arguments: Any?) {
         eventSink = null
     }
+
+    private fun processURI(
+        uri: Uri,
+        copyToLocal: Boolean,
+        original: Boolean,
+        sink: EventChannel.EventSink,
+    ) {
+        val context = context ?: return
+        scope.launch {
+            val mapped = mapURI(context, uri, copyToLocal, original)
+            withContext(Dispatchers.Main.immediate) {
+                if (eventSink === sink) {
+                    sink.success(mapped)
+                }
+            }
+        }
+    }
 }
 
-fun getFileNameAndExtension(context: Context, uri: Uri): Pair<String?, String?> {
+fun getFileNameAndExtension(
+    context: Context,
+    uri: Uri,
+): Pair<String?, String?> {
     var fileName: String? = null
 
     // Case 1: Content URI (most common with SAF and external apps)
@@ -114,29 +144,45 @@ fun getFileNameAndExtension(context: Context, uri: Uri): Pair<String?, String?> 
     }
 
     // Extract extension
-    val extension = fileName?.substringAfterLast('.', missingDelimiterValue = "")
+    val extension =
+        fileName?.substringAfterLast('.', missingDelimiterValue = "")?.takeIf {
+            it.isNotEmpty()
+        }
 
     return Pair(fileName, extension)
 }
 
 @Throws(Exception::class)
-fun copyUriToTmp(context: Context, uri: Uri, ext: String?): String {
-    val tmpFile =
-        File(context.cacheDir, UUID.randomUUID().toString() + if (ext != null) ".$ext" else "")
+fun copyUriToTmp(
+    context: Context,
+    uri: Uri,
+    ext: String?,
+): String {
+    val suffix = ext?.let { ".$it" } ?: ""
+    val tmpFile = File.createTempFile("open_file_handler_", suffix, context.cacheDir)
 
-    context.contentResolver.openInputStream(uri)?.use { input ->
+    val input =
+        context.contentResolver.openInputStream(uri)
+            ?: throw IOException("Unable to open URI: $uri")
+
+    input.use {
         FileOutputStream(tmpFile).use { output ->
-            input.copyTo(output)
+            it.copyTo(output)
         }
     }
 
     return tmpFile.absolutePath
 }
 
-fun mapURIs(context: Context, uris: List<Uri>, copyToLocal: Boolean, original: Boolean): List<Map<String, Any?>> {
-    return uris.map { uri ->
-        val (fileName, extension) = getFileNameAndExtension(context, uri)
-        val path = if (copyToLocal) {
+fun mapURI(
+    context: Context,
+    uri: Uri,
+    copyToLocal: Boolean,
+    original: Boolean,
+): Map<String, Any?> {
+    val (fileName, extension) = getFileNameAndExtension(context, uri)
+    val path =
+        if (copyToLocal) {
             try {
                 copyUriToTmp(context, uri, extension)
             } catch (e: Exception) {
@@ -146,11 +192,10 @@ fun mapURIs(context: Context, uris: List<Uri>, copyToLocal: Boolean, original: B
             null
         }
 
-        mapOf(
-            "uri" to uri.toString(),
-            "name" to fileName,
-            "path" to path,
-            "original" to original
-        )
-    }
+    return mapOf(
+        "uri" to uri.toString(),
+        "name" to fileName,
+        "path" to path,
+        "original" to original,
+    )
 }

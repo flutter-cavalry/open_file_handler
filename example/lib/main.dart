@@ -23,22 +23,17 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     _openFileHandlerPlugin.listen(
-      (files) async {
-        String output = '';
-        for (var file in files) {
-          int length;
-          if (file.path != null) {
-            final f = File(file.path!);
-            length = await f.length();
-          } else {
-            length = -1;
-          }
-
-          output +=
-              'name: ${file.name}, path: ${file.path}, uri: ${file.uri}, size: $length, original: ${file.original}\n';
+      (file) async {
+        int length;
+        if (file.path != null) {
+          final f = File(file.path!);
+          length = await f.length();
+        } else {
+          length = -1;
         }
         setState(() {
-          _output = output;
+          _output =
+              'name: ${file.name}, path: ${file.path}, uri: ${file.uri}, size: $length, original: ${file.original}\n';
         });
 
         if (Platform.isIOS) {

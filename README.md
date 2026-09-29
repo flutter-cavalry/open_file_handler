@@ -34,7 +34,7 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
     <key>CFBundleTypeRole</key>
     <string>Viewer</string>
     <key>LSHandlerRank</key>
-    <string>Alternate</string>
+    <string>Default</string>
   </dict>
 </array>
 ```
@@ -58,7 +58,7 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
     <key>CFBundleTypeRole</key>
     <string>Viewer</string>
     <key>LSHandlerRank</key>
-    <string>Alternate</string>
+    <string>Default</string>
   </dict>
 </array>
 ```
@@ -106,8 +106,8 @@ private fun handleIntent(intent: Intent) {
         val uri = intent.data ?: intent.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)
         if (uri != null) {
             val copyToLocal = true;
-            OpenFileHandlerPlugin.handleOpenURIs(
-                listOf(uri),
+            OpenFileHandlerPlugin.handleOpenURI(
+                uri,
                 copyToLocal,
                 intent.action != Intent.ACTION_SEND
             )
@@ -136,16 +136,15 @@ final _openFileHandlerPlugin = OpenFileHandler();
 //  Cold start: your app is not running, user taps "Open with app".
 //  Warm start: your app is running, user taps "Open with app".
 _openFileHandlerPlugin.listen(
-  (files) {
-    // Handle incoming files.
-    // `files` is a list of [OpenFileHandlerFile] objects with the following properties:
+  (file) async {
+    // Handle the incoming OpenFileHandlerFile with the following properties:
     // - `uri`: The URI/URL of the file. Always available.
     // - `name`: The name of the file.
     //   iOS/macOS: Always available.
     //   Android: Could be null if `DISPLAY_NAME` is not available from the content resolver.
     // - `path`: The path to the file.
     //   iOS/macOS: Always available.
-    //   Android: Only available if you set `copyToLocal` to true when calling `OpenFileHandlerPlugin.handleOpenURIs`.
+    //   Android: Only available if you set `copyToLocal` to true when calling `OpenFileHandlerPlugin.handleOpenURI`.
 
     // iOS only: release security-scoped URLs if needed.
     if (Platform.isIOS) {

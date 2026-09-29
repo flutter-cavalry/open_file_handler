@@ -16,8 +16,8 @@ A new Flutter plugin project.
   s.source_files = 'open_file_handler/Sources/open_file_handler/**/*'
 
   # Set the deployment targets for both iOS and macOS.
-  s.ios.deployment_target = '13.0'
-  s.osx.deployment_target = '10.15'
+  s.ios.deployment_target = '15.0'
+  s.osx.deployment_target = '12.0'
 
   # Define the platform-specific dependencies.
   s.ios.dependency 'Flutter'

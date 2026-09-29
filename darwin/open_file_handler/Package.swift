@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "open_file_handler",
     platforms: [
-        .iOS("13.0"),
-        .macOS("10.15")
+        .iOS("16.0"),
+        .macOS("12.0")
     ],
     products: [
         .library(name: "open-file-handler", targets: ["open_file_handler"])
