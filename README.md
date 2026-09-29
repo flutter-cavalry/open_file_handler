@@ -5,9 +5,11 @@
 Flutter plugin to add 'Open with app' functionality to your app.
 
 - This plugin is **NOT** about handling deep links, universal links or network links.
-- This plugin is **NOT** about handling share content.
+- This plugin is **NOT** about handling shared content.
 - This plugin is about handling **Open with app** functionality on iOS / Android / macOS.
-  - On iOS / macOS, no need to create share extensions!
+  - No need to create Xcode share extensions to use this plugin.
+  - On iOS, this adds your app to 'Open with' menu in the Files app.
+  - On macOS, this adds your app to 'Open with' menu in Finder.
 - Handles both cold start and warm start in a single API!
 
 ## Requirements
