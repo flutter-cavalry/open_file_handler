@@ -16,7 +16,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 
 /** OpenFileHandlerPlugin */
@@ -37,21 +36,19 @@ class OpenFileHandlerPlugin :
         private var instance: OpenFileHandlerPlugin? = null
 
         private var coldOpenURI: Uri? = null
-        private var coldCopyToLocal = false
-        private var coldOriginal = false
+        private var coldAlwaysCopy = false
 
         fun handleOpenURI(
             uri: Uri,
-            copyToLocal: Boolean,
-            original: Boolean,
+            alwaysCopy: Boolean,
         ) {
+            if (uri.scheme != "file" && uri.scheme != "content") return
             val plugin = instance
             if (plugin?.eventSink != null && plugin.context != null) {
-                plugin.processURI(uri, copyToLocal, original, plugin.eventSink!!)
+                plugin.processURI(uri, alwaysCopy, plugin.eventSink!!)
             } else {
                 coldOpenURI = uri
-                coldCopyToLocal = copyToLocal
-                coldOriginal = original
+                coldAlwaysCopy = alwaysCopy
             }
         }
     }
@@ -93,7 +90,7 @@ class OpenFileHandlerPlugin :
         val context = context
         if (events != null && context != null && uri != null) {
             coldOpenURI = null
-            processURI(uri, coldCopyToLocal, coldOriginal, events)
+            processURI(uri, coldAlwaysCopy, events)
         }
     }
 
@@ -103,13 +100,12 @@ class OpenFileHandlerPlugin :
 
     private fun processURI(
         uri: Uri,
-        copyToLocal: Boolean,
-        original: Boolean,
+        alwaysCopy: Boolean,
         sink: EventChannel.EventSink,
     ) {
         val context = context ?: return
         scope.launch {
-            val mapped = mapURI(context, uri, copyToLocal, original)
+            val mapped = mapURI(context, uri, alwaysCopy)
             withContext(Dispatchers.Main.immediate) {
                 if (eventSink === sink) {
                     sink.success(mapped)
@@ -156,17 +152,21 @@ fun getFileNameAndExtension(
 fun copyUriToTmp(
     context: Context,
     uri: Uri,
-    ext: String?,
+    fileName: String?,
 ): String {
-    val suffix = ext?.let { ".$it" } ?: ""
-    val tmpFile = File.createTempFile("open_file_handler_", suffix, context.cacheDir)
+    val directory = File(context.cacheDir, "_app/open_file_handler")
+    if (!directory.isDirectory && !directory.mkdirs()) {
+        throw IOException("Unable to create cache directory: $directory")
+    }
+    val name = File(fileName ?: "file").name.takeUnless { it.isEmpty() || it == "." || it == ".." } ?: "file"
+    val tmpFile = File(directory, name)
 
     val input =
         context.contentResolver.openInputStream(uri)
             ?: throw IOException("Unable to open URI: $uri")
 
     input.use {
-        FileOutputStream(tmpFile).use { output ->
+        tmpFile.outputStream().use { output ->
             it.copyTo(output)
         }
     }
@@ -177,14 +177,13 @@ fun copyUriToTmp(
 fun mapURI(
     context: Context,
     uri: Uri,
-    copyToLocal: Boolean,
-    original: Boolean,
+    alwaysCopy: Boolean,
 ): Map<String, Any?> {
-    val (fileName, extension) = getFileNameAndExtension(context, uri)
+    val (fileName) = getFileNameAndExtension(context, uri)
     val path =
-        if (copyToLocal) {
+        if (alwaysCopy) {
             try {
-                copyUriToTmp(context, uri, extension)
+                copyUriToTmp(context, uri, fileName)
             } catch (e: Exception) {
                 null
             }
@@ -196,6 +195,5 @@ fun mapURI(
         "uri" to uri.toString(),
         "name" to fileName,
         "path" to path,
-        "original" to original,
     )
 }

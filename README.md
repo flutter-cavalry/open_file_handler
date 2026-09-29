@@ -41,6 +41,38 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
 </array>
 ```
 
+If your app can open the original document from Files app instead of an imported copy, you should enable in-place opening in your iOS `Info.plist`:
+
+```xml
+<key>LSSupportsOpeningDocumentsInPlace</key>
+<true/>
+```
+
+Call `OpenFileHandlerPlugin.handleOpenURI` in iOS scene delegate methods:
+
+```swift
+import open_file_handler
+
+override func scene(
+  _ scene: UIScene, willConnectTo session: UISceneSession,
+  options connectionOptions: UIScene.ConnectionOptions
+) {
+  super.scene(scene, willConnectTo: session, options: connectionOptions)
+  if let context = connectionOptions.urlContexts.first {
+    OpenFileHandlerPlugin.handleOpenURI(context, alwaysCopy: false)
+  }
+}
+
+override func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+  super.scene(scene, openURLContexts: URLContexts)
+  if let context = URLContexts.first {
+    OpenFileHandlerPlugin.handleOpenURI(context, alwaysCopy: false)
+  }
+}
+```
+
+When `alwaysCopy` is false, iOS copies only if `context.options.openInPlace` is false; when true, it always copies. Copies go to `<Caches dir>/_app/open_file_handler/<file>`.
+
 See "Usage - Flutter" below for Flutter side usage.
 
 ### macOS
@@ -63,6 +95,19 @@ Add `CFBundleDocumentTypes` to your `Info.plist` file to specify the types of fi
     <string>Default</string>
   </dict>
 </array>
+```
+
+Call `OpenFileHandlerPlugin.handleOpenURI` for the files you want to handle in your macOS `AppDelegate`:
+
+```swift
+import open_file_handler
+
+override func application(_ application: NSApplication, open urls: [URL]) {
+  super.application(application, open: urls)
+  if let url = urls.first {
+    OpenFileHandlerPlugin.handleOpenURI(url)
+  }
+}
 ```
 
 See "Usage - Flutter" below for Flutter side usage.
@@ -107,24 +152,21 @@ private fun handleIntent(intent: Intent) {
     ) {
         val uri = intent.data ?: intent.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)
         if (uri != null) {
-            val copyToLocal = true;
             OpenFileHandlerPlugin.handleOpenURI(
                 uri,
-                copyToLocal,
-                intent.action != Intent.ACTION_SEND
+            alwaysCopy = true,
             )
         }
     }
 }
 ```
 
-#### `copyToLocal`
+#### `alwaysCopy`
 
-Unlike iOS / macOS, where file URLs can be converted to file paths, Android file URIs may not correspond to direct file paths. Use `copyToLocal` to configure the behavior:
 
-- When `false`: no file copy is made. URIs are passed to Flutter side without file paths.
+- When `false`: files are not copied and URIs are passed directly to Flutter without local file paths.
   - You can use my other packages to read Android file URIs: [saf_stream](https://pub.dev/packages/saf_stream), [saf_util](https://pub.dev/packages/saf_util).
-- When `true`: the file is copied to your app's local cache directory. URIs and corresponding file paths are passed to Flutter side.
+- When `true`: the file is copied to `context.cacheDir/_app/open_file_handler/<file>`. The original URI and local path are passed to Flutter.
 
 See "Usage - Flutter" below for Flutter side usage.
 
@@ -140,13 +182,14 @@ final _openFileHandlerPlugin = OpenFileHandler();
 _openFileHandlerPlugin.listen(
   (file) async {
     // Handle the incoming OpenFileHandlerFile with the following properties:
-    // - `uri`: The URI/URL of the file. Always available.
+    // - `uri`: The original URI/URL of the file, even when copied. Always available.
     // - `name`: The name of the file.
     //   iOS/macOS: Always available.
     //   Android: Could be null if `DISPLAY_NAME` is not available from the content resolver.
     // - `path`: The path to the file.
-    //   iOS/macOS: Always available.
-    //   Android: Only available if you set `copyToLocal` to true when calling `OpenFileHandlerPlugin.handleOpenURI`.
+    //   iOS: The original URL path, or the local cache path when copied.
+    //   macOS: The original URL path.
+    //   Android: The local cache path when `alwaysCopy` is true; otherwise null.
 
     // iOS only: release security-scoped URLs if needed.
     if (Platform.isIOS) {

@@ -28,7 +28,7 @@ void main() {
       codec.encodeSuccessEnvelope({
         'name': 'report.txt',
         'path': '/tmp/report.txt',
-        'uri': 'file:///tmp/report.txt',
+        'uri': 'file:///Documents/report.txt',
       }),
       (_) {},
     );
@@ -36,7 +36,7 @@ void main() {
 
     expect(received, hasLength(1));
     expect(received.single.name, 'report.txt');
-    expect(received.single.uri, 'file:///tmp/report.txt');
-    expect(received.single.original, isFalse);
+    expect(received.single.uri, 'file:///Documents/report.txt');
+    expect(received.single.path, '/tmp/report.txt');
   });
 }

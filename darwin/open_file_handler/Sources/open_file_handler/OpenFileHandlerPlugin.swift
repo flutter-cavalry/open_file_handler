@@ -9,6 +9,15 @@
 
 public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private var pendingURI: URL?
+  #if os(iOS)
+    private static weak var instance: OpenFileHandlerPlugin?
+    private static var pendingOpen: (url: URL, openInPlace: Bool, alwaysCopy: Bool)?
+    private var pendingOpenInPlace = true
+    private var pendingAlwaysCopy = false
+  #elseif os(macOS)
+    private static weak var instance: OpenFileHandlerPlugin?
+    private static var pendingOpen: URL?
+  #endif
   private var iosURLsToRelease: [URL] = []
   private var eventSink: FlutterEventSink?
 
@@ -17,7 +26,34 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
     pendingURI = nil
 
     #if os(iOS)
-      if url.startAccessingSecurityScopedResource() {
+      let openInPlace = pendingOpenInPlace
+      pendingOpenInPlace = true
+      let alwaysCopy = pendingAlwaysCopy
+      pendingAlwaysCopy = false
+      let hasSecurityScope = url.startAccessingSecurityScopedResource()
+      if !openInPlace || alwaysCopy {
+        defer {
+          if hasSecurityScope { url.stopAccessingSecurityScopedResource() }
+        }
+        let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+          .appendingPathComponent("_app/open_file_handler", isDirectory: true)
+        let copy = directory.appendingPathComponent(url.lastPathComponent)
+        do {
+          try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+          if FileManager.default.fileExists(atPath: copy.path) {
+            try FileManager.default.removeItem(at: copy)
+          }
+          try FileManager.default.copyItem(at: url, to: copy)
+          eventSink(urlToMap(url, path: copy.path))
+        } catch {
+          try? FileManager.default.removeItem(at: copy)
+          eventSink(
+            FlutterError(
+              code: "file_copy_failed", message: error.localizedDescription, details: nil))
+        }
+        return true
+      }
+      if hasSecurityScope {
         iosURLsToRelease.append(url)
       }
     #endif
@@ -42,9 +78,17 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
     eventChannel.setStreamHandler(instance)
 
     #if os(iOS)
-      registrar.addSceneDelegate(instance)
+      self.instance = instance
+      if let pending = pendingOpen {
+        instance.pendingURI = pending.url
+        instance.pendingOpenInPlace = pending.openInPlace
+        instance.pendingAlwaysCopy = pending.alwaysCopy
+        pendingOpen = nil
+      }
     #elseif os(macOS)
-      registrar.addApplicationDelegate(instance)
+      self.instance = instance
+      instance.pendingURI = pendingOpen
+      pendingOpen = nil
     #endif
   }
 
@@ -78,42 +122,39 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
 }
 
 #if os(iOS)
-  extension OpenFileHandlerPlugin: FlutterSceneLifeCycleDelegate {
-    public func scene(
-      _ scene: UIScene, willConnectTo session: UISceneSession,
-      options connectionOptions: UIScene.ConnectionOptions?
-    ) -> Bool {
-      if let url = connectionOptions?.urlContexts.first?.url {
-        pendingURI = url
+  extension OpenFileHandlerPlugin {
+    public static func handleOpenURI(_ context: UIOpenURLContext, alwaysCopy: Bool) {
+      guard context.url.isFileURL else { return }
+      if let instance = instance {
+        instance.pendingURI = context.url
+        instance.pendingOpenInPlace = context.options.openInPlace
+        instance.pendingAlwaysCopy = alwaysCopy
+        _ = instance.processURLs()
+      } else {
+        pendingOpen = (context.url, context.options.openInPlace, alwaysCopy)
       }
-      return false
-    }
-
-    public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool
-    {
-      if let url = URLContexts.first?.url {
-        pendingURI = url
-      }
-      return processURLs()
     }
   }
 #endif
 
 #if os(macOS)
-  extension OpenFileHandlerPlugin: FlutterAppLifecycleDelegate {
-    public func handleOpen(_ urls: [URL]) -> Bool {
-      if let url = urls.first {
-        pendingURI = url
+  extension OpenFileHandlerPlugin {
+    public static func handleOpenURI(_ url: URL) {
+      guard url.isFileURL else { return }
+      if let instance = instance {
+        instance.pendingURI = url
+        _ = instance.processURLs()
+      } else {
+        pendingOpen = url
       }
-      return processURLs()
     }
   }
 #endif
 
-private func urlToMap(_ url: URL) -> [String: Any?] {
+private func urlToMap(_ url: URL, path: String? = nil) -> [String: Any?] {
   [
     "name": url.lastPathComponent,
-    "path": url.path,
+    "path": path ?? url.path,
     "uri": url.absoluteString,
   ]
 }

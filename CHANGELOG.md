@@ -1,3 +1,7 @@
+## 3.0.0
+
+- **Breaking change**: all platforms now require calling `OpenFileHandlerPlugin.handleOpenURI` manually. See [README](README.md) for usage.
+
 ## 2.0.0
 
 - **Breaking change**: dropped support for multiple file handling. See [README](README.md) for usage.

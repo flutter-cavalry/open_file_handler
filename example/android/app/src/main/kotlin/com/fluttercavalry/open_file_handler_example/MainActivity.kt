@@ -25,11 +25,9 @@ class MainActivity : FlutterActivity() {
         ) {
             val uri = intent.data ?: intent.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)
             if (uri != null) {
-                val copyToLocal = true
                 OpenFileHandlerPlugin.handleOpenURI(
                     uri,
-                    copyToLocal,
-                    intent.action != Intent.ACTION_SEND,
+                    alwaysCopy = true,
                 )
             }
         }

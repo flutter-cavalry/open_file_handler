@@ -33,7 +33,7 @@ class _MyAppState extends State<MyApp> {
         }
         setState(() {
           _output =
-              'name: ${file.name}, path: ${file.path}, uri: ${file.uri}, size: $length, original: ${file.original}\n';
+              'name: ${file.name}, path: ${file.path}, uri: ${file.uri}, size: $length\n';
         });
 
         if (Platform.isIOS) {
