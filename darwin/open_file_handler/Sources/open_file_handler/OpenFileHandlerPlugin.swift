@@ -12,8 +12,8 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   private var iosURLsToRelease: [URL] = []
   private var eventSink: FlutterEventSink?
 
-  private func processURLs() {
-    guard let eventSink = eventSink, let url = pendingURI else { return }
+  private func processURLs() -> Bool {
+    guard let eventSink = eventSink, let url = pendingURI else { return false }
     pendingURI = nil
 
     #if os(iOS)
@@ -23,6 +23,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
     #endif
 
     eventSink(urlToMap(url))
+    return true
   }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -93,8 +94,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
       if let url = URLContexts.first?.url {
         pendingURI = url
       }
-      processURLs()
-      return true
+      return processURLs()
     }
   }
 #endif
@@ -105,8 +105,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
       if let url = urls.first {
         pendingURI = url
       }
-      processURLs()
-      return true
+      return processURLs()
     }
   }
 #endif
