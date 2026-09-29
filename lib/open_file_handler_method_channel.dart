@@ -25,6 +25,7 @@ class MethodChannelOpenFileHandler extends OpenFileHandlerPlatform {
           name: map['name'] as String?,
           uri: map['uri'] as String,
           path: map['path'] as String?,
+          localCopy: map['localCopy'] as bool? ?? false,
         ),
       );
     }, onError: (error) => onError?.call(error));

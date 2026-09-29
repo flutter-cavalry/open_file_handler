@@ -8,16 +8,18 @@ class OpenFileHandlerFile {
   final String? name;
   final String? path;
   final String uri;
+  final bool localCopy;
 
   OpenFileHandlerFile({
     required this.name,
     required this.path,
     required this.uri,
+    required this.localCopy,
   });
 
   @override
   String toString() {
-    return 'OpenFileHandlerFile{name: $name, path: $path, uri: $uri}';
+    return 'OpenFileHandlerFile{name: $name, path: $path, uri: $uri, localCopy: $localCopy}';
   }
 }
 

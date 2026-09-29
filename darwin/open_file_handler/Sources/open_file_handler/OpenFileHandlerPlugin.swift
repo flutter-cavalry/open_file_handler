@@ -44,7 +44,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
             try FileManager.default.removeItem(at: copy)
           }
           try FileManager.default.copyItem(at: url, to: copy)
-          eventSink(urlToMap(url, path: copy.path))
+          eventSink(urlToMap(url, path: copy.path, localCopy: true))
         } catch {
           try? FileManager.default.removeItem(at: copy)
           eventSink(
@@ -58,7 +58,11 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
       }
     #endif
 
-    eventSink(urlToMap(url))
+    #if os(macOS)
+      eventSink(urlToMap(url, localCopy: true))
+    #else
+      eventSink(urlToMap(url, localCopy: false))
+    #endif
     return true
   }
 
@@ -151,10 +155,11 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
   }
 #endif
 
-private func urlToMap(_ url: URL, path: String? = nil) -> [String: Any?] {
+private func urlToMap(_ url: URL, path: String? = nil, localCopy: Bool) -> [String: Any?] {
   [
     "name": url.lastPathComponent,
     "path": path ?? url.path,
     "uri": url.absoluteString,
+    "localCopy": localCopy,
   ]
 }

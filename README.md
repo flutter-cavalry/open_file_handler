@@ -190,6 +190,14 @@ _openFileHandlerPlugin.listen(
     //   iOS: The original URL path, or the local cache path when copied.
     //   macOS: The original URL path.
     //   Android: The local cache path when `alwaysCopy` is true; otherwise null.
+    // - `localCopy`: Whether `path` is reported as a local copy.
+    //   iOS: True when copied because `openInPlace` is false or `alwaysCopy` is true.
+    //   macOS: Always true.
+    //   Android: True when `alwaysCopy` successfully copied the file.
+    // - `localCopy`: Whether the plugin reports a local copy.
+    //   iOS: True when the plugin copied the file; otherwise false.
+    //   macOS: Always true.
+    //   Android: True when `alwaysCopy` succeeded; otherwise false.
 
     // iOS only: release security-scoped URLs if needed.
     if (Platform.isIOS) {

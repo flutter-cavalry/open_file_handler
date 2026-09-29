@@ -29,6 +29,7 @@ void main() {
         'name': 'report.txt',
         'path': '/tmp/report.txt',
         'uri': 'file:///Documents/report.txt',
+        'localCopy': true,
       }),
       (_) {},
     );
@@ -38,5 +39,6 @@ void main() {
     expect(received.single.name, 'report.txt');
     expect(received.single.uri, 'file:///Documents/report.txt');
     expect(received.single.path, '/tmp/report.txt');
+    expect(received.single.localCopy, isTrue);
   });
 }

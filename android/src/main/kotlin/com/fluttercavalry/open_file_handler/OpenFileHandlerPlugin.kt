@@ -195,5 +195,6 @@ fun mapURI(
         "uri" to uri.toString(),
         "name" to fileName,
         "path" to path,
+        "localCopy" to (path != null),
     )
 }
