@@ -7,29 +7,35 @@
   import Cocoa
 #endif
 
+private struct PendingOpenRequest {
+  let url: URL
+  #if os(iOS)
+    let openInPlace: Bool
+    let alwaysCopy: Bool
+  #endif
+}
+
 public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
-  private var pendingURI: URL?
+  // The latest request received by this instance, waiting for an event sink.
+  private var pendingOpenRequest: PendingOpenRequest?
   #if os(iOS)
     private static weak var instance: OpenFileHandlerPlugin?
-    private static var pendingOpen: (url: URL, openInPlace: Bool, alwaysCopy: Bool)?
-    private var pendingOpenInPlace = true
-    private var pendingAlwaysCopy = false
   #elseif os(macOS)
     private static weak var instance: OpenFileHandlerPlugin?
-    private static var pendingOpen: URL?
   #endif
+  // Buffers a file-open request until Flutter calls register(with:) for this plugin.
+  private static var pendingOpenBeforeRegistration: PendingOpenRequest?
   private var iosURLsToRelease: [URL] = []
   private var eventSink: FlutterEventSink?
 
-  private func processURLs() -> Bool {
-    guard let eventSink = eventSink, let url = pendingURI else { return false }
-    pendingURI = nil
+  private func processURL() -> Bool {
+    guard let eventSink = eventSink, let request = pendingOpenRequest else { return false }
+    pendingOpenRequest = nil
+    let url = request.url
 
     #if os(iOS)
-      let openInPlace = pendingOpenInPlace
-      pendingOpenInPlace = true
-      let alwaysCopy = pendingAlwaysCopy
-      pendingAlwaysCopy = false
+      let openInPlace = request.openInPlace
+      let alwaysCopy = request.alwaysCopy
       let hasSecurityScope = url.startAccessingSecurityScopedResource()
       if !openInPlace || alwaysCopy {
         defer {
@@ -50,6 +56,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
           eventSink(
             FlutterError(
               code: "file_copy_failed", message: error.localizedDescription, details: nil))
+          return false
         }
         return true
       }
@@ -83,17 +90,11 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
 
     #if os(iOS)
       self.instance = instance
-      if let pending = pendingOpen {
-        instance.pendingURI = pending.url
-        instance.pendingOpenInPlace = pending.openInPlace
-        instance.pendingAlwaysCopy = pending.alwaysCopy
-        pendingOpen = nil
-      }
     #elseif os(macOS)
       self.instance = instance
-      instance.pendingURI = pendingOpen
-      pendingOpen = nil
     #endif
+    instance.pendingOpenRequest = pendingOpenBeforeRegistration
+    pendingOpenBeforeRegistration = nil
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -115,7 +116,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
     -> FlutterError?
   {
     eventSink = events
-    processURLs()
+    processURL()
     return nil
   }
 
@@ -127,30 +128,38 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
 
 #if os(iOS)
   extension OpenFileHandlerPlugin {
-    public static func handleOpenURI(_ context: UIOpenURLContext, alwaysCopy: Bool) {
-      guard context.url.isFileURL else { return }
+    @discardableResult
+    public static func handleOpenURI(_ context: UIOpenURLContext, alwaysCopy: Bool) -> Bool {
+      guard context.url.isFileURL else { return false }
       if let instance = instance {
-        instance.pendingURI = context.url
-        instance.pendingOpenInPlace = context.options.openInPlace
-        instance.pendingAlwaysCopy = alwaysCopy
-        _ = instance.processURLs()
+        instance.pendingOpenRequest = PendingOpenRequest(
+          url: context.url,
+          openInPlace: context.options.openInPlace,
+          alwaysCopy: alwaysCopy)
+        _ = instance.processURL()
       } else {
-        pendingOpen = (context.url, context.options.openInPlace, alwaysCopy)
+        pendingOpenBeforeRegistration = PendingOpenRequest(
+          url: context.url,
+          openInPlace: context.options.openInPlace,
+          alwaysCopy: alwaysCopy)
       }
+      return true
     }
   }
 #endif
 
 #if os(macOS)
   extension OpenFileHandlerPlugin {
-    public static func handleOpenURI(_ url: URL) {
-      guard url.isFileURL else { return }
+    @discardableResult
+    public static func handleOpenURI(_ url: URL) -> Bool {
+      guard url.isFileURL else { return false }
       if let instance = instance {
-        instance.pendingURI = url
-        _ = instance.processURLs()
+        instance.pendingOpenRequest = PendingOpenRequest(url: url)
+        _ = instance.processURL()
       } else {
-        pendingOpen = url
+        pendingOpenBeforeRegistration = PendingOpenRequest(url: url)
       }
+      return true
     }
   }
 #endif
