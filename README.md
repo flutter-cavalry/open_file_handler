@@ -128,7 +128,7 @@ Add intent filters to your `AndroidManifest.xml` file to specify the types of fi
 </intent-filter>
 ```
 
-Handle incoming intents in main activity `MainActivity.kt`:
+Set the activity's `android:launchMode` to `singleTask` and leave `android:taskAffinity` unset so Android can bring the existing app task forward. Handle incoming intents in main activity `MainActivity.kt`:
 
 ```kotlin
 import com.fluttercavalry.open_file_handler.OpenFileHandlerPlugin
