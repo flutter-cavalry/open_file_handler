@@ -2,6 +2,7 @@ package com.fluttercavalry.open_file_handler
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
@@ -180,8 +181,9 @@ fun mapURI(
     alwaysCopy: Boolean,
 ): Map<String, Any?> {
     val (fileName) = getFileNameAndExtension(context, uri)
+    val shouldCopy = alwaysCopy || !DocumentsContract.isDocumentUri(context, uri)
     val path =
-        if (alwaysCopy) {
+        if (shouldCopy) {
             try {
                 copyUriToTmp(context, uri, fileName)
             } catch (e: Exception) {

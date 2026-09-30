@@ -27,7 +27,7 @@ class MainActivity : FlutterActivity() {
             if (uri != null) {
                 OpenFileHandlerPlugin.handleOpenURI(
                     uri,
-                    alwaysCopy = true,
+                    alwaysCopy = false,
                 )
             }
         }
