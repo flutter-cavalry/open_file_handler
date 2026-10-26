@@ -116,7 +116,7 @@ public class OpenFileHandlerPlugin: NSObject, FlutterPlugin, FlutterStreamHandle
     -> FlutterError?
   {
     eventSink = events
-    processURL()
+    _ = processURL()
     return nil
   }
 
